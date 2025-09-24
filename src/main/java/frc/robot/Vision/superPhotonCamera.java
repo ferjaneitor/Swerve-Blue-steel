@@ -9,8 +9,9 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import org.photonvision.targeting.TargetCorner;
 
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.wpilibj.Timer;
 
-public class superPhotonCamara {
+public class superPhotonCamera {
 
     private final PhotonCamera camera;
 
@@ -24,13 +25,13 @@ public class superPhotonCamara {
 
     private double bestYaw, bestPitch, bestSkew, bestArea, bestPoseAmbiguity;
 
-    private Transform3d bestCamaraToTarget, bestAltarnateCamaraToTarget;
+    private Transform3d bestCameraToTarget, bestAltarnateCameraToTarget;
 
     private List<TargetCorner> targetCorners;
 
     private int bestTargetID;
 
-    public superPhotonCamara (
+    public superPhotonCamera (
         String cameraName
     ){
 
@@ -39,8 +40,8 @@ public class superPhotonCamara {
         this.pipeLineResults = new PhotonPipelineResult();
         this.targetList = List.of();
         this.targetCorners = List.of();
-        this.bestAltarnateCamaraToTarget = null;
-        this.bestCamaraToTarget = null ;
+        this.bestAltarnateCameraToTarget = null;
+        this.bestCameraToTarget = null ;
         this.bestTargetID = -1;
         this.hasTarget = false;
         this.bestArea = this.bestPitch = this.bestSkew = this.bestYaw = this.bestPoseAmbiguity = Double.NaN;
@@ -76,17 +77,19 @@ public class superPhotonCamara {
             this.bestYaw = this.bestTarget.getYaw();
             this.bestPoseAmbiguity = this.bestTarget.getPoseAmbiguity();
 
-            this.bestAltarnateCamaraToTarget = this.bestTarget.getAlternateCameraToTarget();
-            this.bestCamaraToTarget = this.bestTarget.getBestCameraToTarget();
+            this.bestAltarnateCameraToTarget = this.bestTarget.getAlternateCameraToTarget();
+            this.bestCameraToTarget = this.bestTarget.getBestCameraToTarget();
 
             List<TargetCorner> corners = this.bestTarget.getDetectedCorners();
             this.targetCorners = ( corners !=null ) ? corners : List.of() ;
 
+            this.bestTargetID = this.bestTarget.getFiducialId();
+
         } else {
             
             this.targetCorners = List.of();
-            this.bestAltarnateCamaraToTarget = null;
-            this.bestCamaraToTarget = null ;
+            this.bestAltarnateCameraToTarget = null;
+            this.bestCameraToTarget = null ;
             this.bestTargetID = -1;
             this.bestArea = this.bestPitch = this.bestSkew = this.bestYaw = this.bestPoseAmbiguity = Double.NaN;
 
@@ -112,10 +115,13 @@ public class superPhotonCamara {
 
     }
 
-    public double getLatencyMillis(){
-
-        return (pipeLineResults != null) ? (pipeLineResults.getTimestampSeconds() * 1000) : Double.NaN ;
-
+    public double getLatencyMillis() {
+        if (this.pipeLineResults == null) return Double.NaN;
+        // Si tu versión de PhotonVision tiene getLatencyMillis(), úsalo:
+        // return pipelineResult.getLatencyMillis();
+        // Alternativa robusta: tiempo actual - timestamp de captura
+        double seconds = Timer.getFPGATimestamp() - this.pipeLineResults.getTimestampSeconds();
+        return seconds * 1000.0;
     }
 
     public double getLatencySeconds(){
@@ -178,15 +184,15 @@ public class superPhotonCamara {
 
     }
 
-    public Transform3d getBestCamaraTotarget(){
+    public Transform3d getBestCameraTotarget(){
 
-        return bestCamaraToTarget;
+        return bestCameraToTarget;
 
     }
 
-    public Transform3d getBestAltarnateCamaraToTarget(){
+    public Transform3d getBestAltarnateCameraToTarget(){
 
-        return bestAltarnateCamaraToTarget;
+        return bestAltarnateCameraToTarget;
 
     }
 
@@ -252,7 +258,7 @@ public class superPhotonCamara {
 
     }
 
-    public List<Transform3d> getBestCamaraToTargetList(){
+    public List<Transform3d> getBestCameraToTargetList(){
 
         List<Transform3d> outPut = new ArrayList<>(targetList.size());
 
@@ -262,9 +268,9 @@ public class superPhotonCamara {
 
     }
 
-    public List<Transform3d> getAltarnateCamaraToTargetList(){
+    public List<Transform3d> getAltarnateCameraToTargetList(){
 
-        List<Transform3d> outPut = new ArrayList<>(targetList.size());
+       List<Transform3d> outPut = new ArrayList<>(targetList.size());
 
         for ( PhotonTrackedTarget target : targetList ) outPut.add(target.getAlternateCameraToTarget());
 
