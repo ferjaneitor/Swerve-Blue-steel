@@ -203,8 +203,8 @@ public class SwerveModule {
 
         double SteeringMotorPosition = steeringPidController.calculate(getSteeringPosition(), StateAngleRad );
 
-        DriveMotor.setVoltage( DriveMotorState );
-        SteeringMotor.setVoltage(SteeringMotorPosition);
+        DriveMotor.set( DriveMotorState );
+        SteeringMotor.set(SteeringMotorPosition);
 
     }
 

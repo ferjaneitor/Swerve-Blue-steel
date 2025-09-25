@@ -1,9 +1,12 @@
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 //import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 
@@ -18,7 +21,7 @@ public final class Constants {
         public static final double kSteeringEncoderRot2Rad = kSteeringMotorGearRatio * 2 * Math.PI;
         public static final double kDriveEncoderRPM2MeterPerSec = kDriveEncoderRot2Meter / 60;
         public static final double kSteeringEncoderRPM2RadPerSec = kSteeringEncoderRot2Rad / 60;
-        public static final double kPSteering = 0.5;
+        public static final double kPSteering = 0.2 ;
         public static final double kISteering = 0;
         public static final double KDSteering = 0;
         public static final String CANivore = "5133BlueSteel";
@@ -94,9 +97,17 @@ public final class Constants {
         public static final double kDeadband = 0.25;
     }
 
+    public static final class FieldCosntants{
+        
+        public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
+
+    }
+
     public static final class VisionConstants{
 
-        public static final String cameraName1 = "";
+        public static final String cameraName = "";
+
+        public static final Transform3d kRobotToCam = new Transform3d( new Translation3d( 0 , 0 , 0 ), new Rotation3d( 0 , 0 , 0 ));
 
     }
 

@@ -5,6 +5,7 @@ import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.revrobotics.spark.SparkMax;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
@@ -18,6 +19,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry3d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -29,44 +31,44 @@ public class SwerveSubsystem extends SubsystemBase {
     boolean isFieldOriented;
     
     private final SwerveModule FrontLeft = new SwerveModule(
-        DriveConstants.kFrontLeftDriveMotorPort,
         DriveConstants.kFrontLeftSteeringMotorPort,
+        DriveConstants.kFrontLeftDriveMotorPort,
         DriveConstants.kFrontLeftDriveAbsoluteEncoderPort,
-        DriveConstants.kFrontLeftDriveEncoderReversed,
         DriveConstants.kFrontLeftSteeringEncoderReversed,
+        DriveConstants.kFrontLeftDriveEncoderReversed,
         DriveConstants.kFrontLeftDriveAbsoluteEncoderReversed,
         DriveConstants.kFrontLeftDriveAbsoluteEncoderOffsetRad,
         ModuleConstants.CANivore
     );
     
     private final SwerveModule FrontRight = new SwerveModule(
-        DriveConstants.kFrontRightDriveMotorPort,
         DriveConstants.kFrontRightSteeringMotorPort,
+        DriveConstants.kFrontRightDriveMotorPort,
         DriveConstants.kFrontRightDriveAbsoluteEncoderPort,
-        DriveConstants.kFrontRightDriveEncoderReversed,
         DriveConstants.kFrontRightSteeringEncoderReversed,
+        DriveConstants.kFrontRightDriveEncoderReversed,
         DriveConstants.kFrontRightDriveAbsoluteEncoderReversed,
         DriveConstants.kFrontRightDriveAbsoluteEncoderOffsetRad,
         ModuleConstants.CANivore
     );
     
     private final SwerveModule BackLeft = new SwerveModule(
-        DriveConstants.kBackLeftDriveMotorPort,
         DriveConstants.kBackLeftSteeringMotorPort,
+        DriveConstants.kBackLeftDriveMotorPort,
         DriveConstants.kBackLeftDriveAbsoluteEncoderPort,
-        DriveConstants.kBackLeftDriveEncoderReversed,
         DriveConstants.kBackLeftSteeringEncoderReversed,
+        DriveConstants.kBackLeftDriveEncoderReversed,
         DriveConstants.kBackLeftDriveAbsoluteEncoderReversed,
         DriveConstants.kBackLeftDriveAbsoluteEncoderOffsetRad,
         ModuleConstants.CANivore
     );
     
     private final SwerveModule BackRight = new SwerveModule(
-        DriveConstants.kBackRightDriveMotorPort,
         DriveConstants.kBackRightSteeringMotorPort,
+        DriveConstants.kBackRightDriveMotorPort,
         DriveConstants.kBackRightDriveAbsoluteEncoderPort,
-        DriveConstants.kBackRightDriveEncoderReversed,
         DriveConstants.kBackRightSteeringEncoderReversed,
+        DriveConstants.kBackRightDriveEncoderReversed,
         DriveConstants.kBackRightDriveAbsoluteEncoderReversed,
         DriveConstants.kBackRightDriveAbsoluteEncoderOffsetRad,
         ModuleConstants.CANivore
@@ -145,7 +147,7 @@ public class SwerveSubsystem extends SubsystemBase {
             config = new RobotConfig(
                 0
                 ,0
-                , new ModuleConfig(0, 0, 0, null, 0, 0)
+                , new ModuleConfig(0, 0, 0, DCMotor.getNEO(8), 0, 0)
                 ,  DriveConstants.modulesOffSet 
             );
 }

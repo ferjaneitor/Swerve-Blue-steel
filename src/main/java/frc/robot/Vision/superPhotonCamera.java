@@ -1,15 +1,27 @@
 package frc.robot.Vision;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
 
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonUtils;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import org.photonvision.targeting.TargetCorner;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
+import frc.robot.Constants.FieldCosntants;
 
 public class superPhotonCamera {
 
@@ -25,22 +37,33 @@ public class superPhotonCamera {
 
     private double bestYaw, bestPitch, bestSkew, bestArea, bestPoseAmbiguity;
 
-    private Transform3d bestCameraToTarget, bestAltarnateCameraToTarget;
+    private Transform3d bestCameraToTarget, bestAlternateCameraToTarget, cameraToRobot;
 
     private List<TargetCorner> targetCorners;
 
     private int bestTargetID;
 
+    private PhotonPoseEstimator poseEstimator;
+
     public superPhotonCamera (
-        String cameraName
+        String cameraName,
+        Transform3d CameraToRobotTransform
     ){
 
         this.camera = new PhotonCamera(cameraName);
 
+        this.cameraToRobot = CameraToRobotTransform;
+
+        this.poseEstimator = new PhotonPoseEstimator(
+            FieldCosntants.kTagLayout
+            ,PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR
+            ,this.cameraToRobot
+        );
+
         this.pipeLineResults = new PhotonPipelineResult();
-        this.targetList = List.of();
-        this.targetCorners = List.of();
-        this.bestAltarnateCameraToTarget = null;
+        this.targetList = Collections.emptyList();
+        this.targetCorners = Collections.emptyList();
+        this.bestAlternateCameraToTarget = null;
         this.bestCameraToTarget = null ;
         this.bestTargetID = -1;
         this.hasTarget = false;
@@ -48,53 +71,101 @@ public class superPhotonCamera {
 
     }
 
-    public void update(){
+    public void update() {
+        final PhotonPipelineResult latest = camera.getLatestResult();
+        this.pipeLineResults = (latest != null) ? latest : new PhotonPipelineResult();
 
-        PhotonPipelineResult pipeLineUpdate = camera.getLatestResult();
+        this.hasTarget = this.pipeLineResults.hasTargets();
 
-        if( pipeLineUpdate == null ){
+        final List<PhotonTrackedTarget> ts = this.pipeLineResults.getTargets();
+        this.targetList = (ts != null) ? ts : Collections.emptyList();
 
-            this.pipeLineResults = new PhotonPipelineResult();
-
-        }else{
-
-            this.pipeLineResults = pipeLineUpdate;
-
-        }
-
-        this.hasTarget = pipeLineResults.hasTargets();
-
-        List<PhotonTrackedTarget> ts = pipeLineResults.getTargets();
-        this.targetList = ( ts != null ) ? ts : List.of();
-
-        this.bestTarget = pipeLineResults.getBestTarget();
-
-        if ( this.bestTarget != null) {
-            
+        this.bestTarget = this.pipeLineResults.getBestTarget();
+        if (this.bestTarget != null) {
             this.bestArea = this.bestTarget.getArea();
             this.bestPitch = this.bestTarget.getPitch();
             this.bestSkew = this.bestTarget.getSkew();
             this.bestYaw = this.bestTarget.getYaw();
             this.bestPoseAmbiguity = this.bestTarget.getPoseAmbiguity();
 
-            this.bestAltarnateCameraToTarget = this.bestTarget.getAlternateCameraToTarget();
+            this.bestAlternateCameraToTarget = this.bestTarget.getAlternateCameraToTarget();
             this.bestCameraToTarget = this.bestTarget.getBestCameraToTarget();
 
-            List<TargetCorner> corners = this.bestTarget.getDetectedCorners();
-            this.targetCorners = ( corners !=null ) ? corners : List.of() ;
+            final List<TargetCorner> corners = this.bestTarget.getDetectedCorners();
+            this.targetCorners = (corners != null) ? corners : Collections.emptyList();
 
             this.bestTargetID = this.bestTarget.getFiducialId();
-
         } else {
+            clearBest();
+        }
+    }
+
+    private void clearBest() {
+        this.targetCorners = Collections.emptyList();
+        this.bestAlternateCameraToTarget = null;
+        this.bestCameraToTarget = null;
+        this.bestTargetID = -1;
+        this.bestArea = this.bestPitch = this.bestSkew = this.bestYaw = this.bestPoseAmbiguity = Double.NaN;
+    }
+
+    public PhotonPoseEstimator getPoseEstimator(){
+
+        return this.poseEstimator;
+
+    }
+    
+    public Pose3d FieldRelativePose ( ){
+        if (FieldCosntants.kTagLayout.getTagPose(bestTargetID).isPresent()) {
+
+            return PhotonUtils.estimateFieldToRobotAprilTag(bestCameraToTarget, FieldCosntants.kTagLayout.getTagPose(bestTargetID).get(), this.cameraToRobot);
             
-            this.targetCorners = List.of();
-            this.bestAltarnateCameraToTarget = null;
-            this.bestCameraToTarget = null ;
-            this.bestTargetID = -1;
-            this.bestArea = this.bestPitch = this.bestSkew = this.bestYaw = this.bestPoseAmbiguity = Double.NaN;
+        }else{
+
+            return new Pose3d();
 
         }
+    }
 
+    /** Estima pose con PhotonPoseEstimator (multi-tag). Usa el último frame. */
+    public Optional<EstimatedRobotPose> estimateRobotPoseMultiTag() {
+        return poseEstimator.update(this.pipeLineResults);
+    }
+
+    /**
+     * Estimación single-tag con utilitario (sólo si conoces el ID y hay bestCameraToTarget).
+     * Devuelve Optional.empty() si no hay datos suficientes.
+     */
+    public Optional<Pose3d> estimateRobotPoseSingleTag() {
+        if (bestCameraToTarget == null || bestTargetID < 0) return Optional.empty();
+        final var optTagPose = FieldCosntants.kTagLayout.getTagPose(bestTargetID);
+        if (optTagPose.isEmpty()) return Optional.empty();
+        Pose3d fieldToRobot = PhotonUtils.estimateFieldToRobotAprilTag(
+            bestCameraToTarget, optTagPose.get(), this.cameraToRobot
+        );
+        return Optional.of(fieldToRobot);
+    }
+
+    /**
+     * Drena todos los frames no leídos, estima y entrega cada `EstimatedRobotPose`
+     * al consumidor (útil para llamar `poseEstimator.addVisionMeasurement`).
+     */
+    public void consumeUnreadAndEstimate(Consumer<EstimatedRobotPose> consumer) {
+        for (var frame : camera.getAllUnreadResults()) {
+            poseEstimator.update(frame).ifPresent(consumer);
+        }
+    }
+
+    public static double getDistanceBetween(Pose2d a, Pose2d b) {
+        return PhotonUtils.getDistanceToPose(a, b);
+    }
+
+    /** Traducción cámara→objetivo estimada a partir de distancia e Yaw actual. */
+    public Optional<Translation2d> estimateCameraToTargetTranslation(double distanceMeters) {
+        if (Double.isNaN(bestYaw)) return Optional.empty();
+        // Nota: el signo puede depender de tu convención. Ajusta si ves un espejo L/R.
+        return Optional.of(PhotonUtils.estimateCameraToTargetTranslation(
+            distanceMeters, Rotation2d.fromDegrees(-this.bestYaw)
+        ));
     }
 
     public boolean isConnected(){
@@ -190,9 +261,9 @@ public class superPhotonCamera {
 
     }
 
-    public Transform3d getBestAltarnateCameraToTarget(){
+    public Transform3d getbestAlternateCameraToTarget(){
 
-        return bestAltarnateCameraToTarget;
+        return bestAlternateCameraToTarget;
 
     }
 
