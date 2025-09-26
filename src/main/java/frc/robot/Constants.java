@@ -111,4 +111,16 @@ public final class Constants {
 
     }
 
+    public static final class ElevatorConstants{
+
+        public static final int ElevatorID = 10 ;
+
+        public static final int PivotID = 9 ;
+
+        public static final double ElevatorMaxSpeed = 0.5;
+
+        public static final double PivotMaxSpeed = 0.3;
+
+    }
+
 }

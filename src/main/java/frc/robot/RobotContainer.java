@@ -5,17 +5,17 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Drive.SwerveJoystickCmd;
 import frc.robot.Drive.SwerveSubsystem;
+import frc.robot.Elevator.ElevatorCmd;
+import frc.robot.Elevator.ElevatorSubsystem;
 import frc.robot.Vision.visionSubsystem;
-import frc.robot.utils.IndividualNEOTestCmd;
 
 public class RobotContainer {
 
@@ -25,6 +25,8 @@ public class RobotContainer {
 
   private final CommandXboxController driverController = new CommandXboxController(0);
   private final CommandXboxController addOnssController = new CommandXboxController(1);
+
+  private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem( ElevatorConstants.ElevatorID, ElevatorConstants.PivotID );
 
   private final SendableChooser<Command> autoChooser;
   
@@ -55,7 +57,12 @@ public class RobotContainer {
 
     driverController.b().onTrue(new InstantCommand( ()-> swerveSubsystem.ZeroHeading() ));
 
-    // addOnssController.a().onTrue( new IndividualTestCmd(6, MotorType.kBrushless, 0.2));
+    elevatorSubsystem.setDefaultCommand(
+        new ElevatorCmd(
+          () -> addOnssController.getLeftY()
+          , ()-> addOnssController.getRightY()
+          , elevatorSubsystem)
+    );
 
   }
 
