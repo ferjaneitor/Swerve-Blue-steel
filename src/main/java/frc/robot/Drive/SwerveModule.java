@@ -177,8 +177,8 @@ public class SwerveModule {
 
     public void Stop(){
 
-        DriveMotor.setVoltage(0);
-        SteeringMotor.setVoltage(0);
+        DriveMotor.set(0);
+        SteeringMotor.set(0);
 
     }
 

@@ -5,6 +5,7 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -14,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Drive.SwerveJoystickCmd;
 import frc.robot.Drive.SwerveSubsystem;
 import frc.robot.Vision.visionSubsystem;
+import frc.robot.utils.IndividualNEOTestCmd;
 
 public class RobotContainer {
 
@@ -32,26 +34,28 @@ public class RobotContainer {
       autoChooser = AutoBuilder.buildAutoChooser();
 
     // Another option that allows you to specify the default auto by its name
-    // autoChooser = AutoBuilder.buildAutoChooser("My Default Auto");
+      //autoChooser = AutoBuilder.buildAutoChooser("My Default Auto");
 
-    SmartDashboard.putData("Auto Chooser", autoChooser);
+    // SmartDashboard.putData("Auto Chooser", autoChooser);
 
-    swerveSubsystem.setDefaultCommand(
-      new SwerveJoystickCmd(
-        swerveSubsystem
-        , () -> driverController.getLeftX()
-        , () -> driverController.getLeftY()
-        , () -> driverController.getRightX()
-        , ()-> driverController.a().getAsBoolean()
-        )
-    );
+      swerveSubsystem.setDefaultCommand(
+        new SwerveJoystickCmd(
+          swerveSubsystem
+          , () -> driverController.getLeftX()
+          , () -> driverController.getLeftY()
+          , () -> driverController.getRightX()
+          , () -> driverController.leftBumper().getAsBoolean()
+          )
+      );
 
     configureBindings();
   }
 
   private void configureBindings() {
 
-    driverController.y().onTrue(new InstantCommand( ()-> swerveSubsystem.ZeroHeading() ));
+    driverController.b().onTrue(new InstantCommand( ()-> swerveSubsystem.ZeroHeading() ));
+
+    // addOnssController.a().onTrue( new IndividualTestCmd(6, MotorType.kBrushless, 0.2));
 
   }
 

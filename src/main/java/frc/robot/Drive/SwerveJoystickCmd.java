@@ -12,88 +12,78 @@ import frc.robot.Constants.OIConstants;
 public class SwerveJoystickCmd extends Command {
     
     private final SwerveSubsystem swerveSubsystem;
-    private final Supplier<Double> xSupplier,ySupplier,zSupplier;
-    private final Supplier<Boolean> fieldorientedSupplier;
+    private final Supplier<Double> xSupplier, ySupplier, zSupplier;
+    private final Supplier<Boolean> isFieldOrientedSupplier;
     private final SlewRateLimiter xLimiter, yLimiter, zLimiter;
 
     public SwerveJoystickCmd(
-        SwerveSubsystem swerveSubsystem,
-        Supplier<Double> xSupplierJoyStick,
-        Supplier<Double> ySupplierJoyStick,
-        Supplier<Double> zSupplierJoyStick,
-        Supplier<Boolean> fieldorientedButton
-    ){
-
+            SwerveSubsystem swerveSubsystem,
+            Supplier<Double> xSupplier, 
+            Supplier<Double> ySupplier, 
+            Supplier<Double> zSupplier,
+            Supplier<Boolean> isFieldOrientedSupplier)
+        {
         this.swerveSubsystem = swerveSubsystem;
-        this.xSupplier = xSupplierJoyStick;
-        this.ySupplier = ySupplierJoyStick;
-        this.zSupplier = zSupplierJoyStick;
-        this.fieldorientedSupplier = fieldorientedButton;
-
+        this.xSupplier = xSupplier;
+        this.ySupplier = ySupplier;
+        this.zSupplier = zSupplier;
+        this.isFieldOrientedSupplier = isFieldOrientedSupplier;
         this.xLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
         this.yLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
         this.zLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAngularAccelerationUnitsPerSecond);
-
         addRequirements(swerveSubsystem);
-
+        
+        
+    }
+    
+    @Override
+    public void initialize() {
     }
 
     @Override
-    public void initialize(){
-
-    }
-
-    @Override
-    public void execute(){
-
+    public void execute() {
+        // 1. Get real-time joystick inputs
         double xSpeed = xSupplier.get();
         double ySpeed = -ySupplier.get();
-        double zSpeed = zSupplier.get();
+        double turningSpeed = zSupplier.get();
 
-        xSpeed = Math.abs(xSpeed) > OIConstants.kDeadband ? xSpeed : 0;
-        ySpeed = Math.abs(ySpeed) > OIConstants.kDeadband ? ySpeed : 0;
-        zSpeed = Math.abs(zSpeed) > OIConstants.kDeadband ? zSpeed : 0;
+        // 2. Apply deadband
+        xSpeed = Math.abs(xSpeed) > OIConstants.kDeadband ? xSpeed : 0.0;
+        ySpeed = Math.abs(ySpeed) > OIConstants.kDeadband ? ySpeed : 0.0;
+        turningSpeed = Math.abs(turningSpeed) > OIConstants.kDeadband ? turningSpeed : 0.0;
 
+        // 3. Make the driving smoother
         xSpeed = xLimiter.calculate(xSpeed) * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
         ySpeed = yLimiter.calculate(ySpeed) * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
-        zSpeed = zLimiter.calculate(zSpeed) * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond;
-
+        turningSpeed = zLimiter.calculate(turningSpeed) * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond;
+        
+        // 4. Construct desired chassis speeds
         ChassisSpeeds chassisSpeeds;
-
-        if ( fieldorientedSupplier.get() ){
-
-            chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, zSpeed);
-
+        if (isFieldOrientedSupplier.get()) {
+            // Relative to robot
+            chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
             swerveSubsystem.changeIsFieldOriented(false);
-
-        }else{
-
-            chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, zSpeed);
-
-            chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, zSpeed, swerveSubsystem.getRotation2d());
-
+        } else {
+            // Relative to robot
+            chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
+            // Relative to field
+            chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, turningSpeed, swerveSubsystem.getRotation2d());
             swerveSubsystem.changeIsFieldOriented(true);
-
         }
-
-        SwerveModuleState[] swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
-
-        swerveSubsystem.setModuleStates(swerveModuleStates);
-
-    }
-
-    @Override 
-    public void end(boolean interrupted){
-
-        swerveSubsystem.stopModules();
-
+        
+        SwerveModuleState[] moduleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
+        swerveSubsystem.setModuleStates(moduleStates);
+        // 5. Output each module states to wheels
     }
 
     @Override
-    public boolean isFinished(){
+    public void end(boolean interrupted) {
+        swerveSubsystem.stopModules();
+    }
 
+    @Override
+    public boolean isFinished() {
         return false;
-
     }
 
 }

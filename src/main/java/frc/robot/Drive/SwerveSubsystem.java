@@ -90,10 +90,10 @@ public class SwerveSubsystem extends SubsystemBase {
     private SwerveModuleState[] getModuleState(){
 
         SwerveModuleState[] moduleStates = new SwerveModuleState[] {
-            FrontLeft.getState()
-            ,FrontRight.getState()
-            ,BackLeft.getState()
-            ,BackRight.getState()
+            FrontLeft.getState(),
+            FrontRight.getState(),
+            BackLeft.getState(),
+            BackRight.getState()
         };
 
         return moduleStates;
@@ -176,13 +176,13 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public boolean isFieldOriented(){
 
-        return isFieldOriented;
+        return this.isFieldOriented;
 
     }
 
     public void changeIsFieldOriented( boolean newState ){
 
-        isFieldOriented = newState;
+        this.isFieldOriented = newState;
 
     }
 
