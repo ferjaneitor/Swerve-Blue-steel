@@ -109,6 +109,14 @@ public final class Constants {
 
         public static final Transform3d kRobotToCam = new Transform3d( new Translation3d( 0 , 0 , 0 ), new Rotation3d( 0 , 0 , 0 ));
 
+        public static final double maxAmbiguity = 0.0;
+
+        public static final double MAX_DIST_SINGLE = 10;
+
+        public static final double MAX_DIST_MULTIPLE = 20;
+
+        public static final double MAX_YAW_RATE_DEG_SEC = 0.5;
+
     }
 
     public static final class ElevatorConstants{

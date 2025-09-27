@@ -25,6 +25,8 @@ import frc.robot.Constants.FieldCosntants;
 
 public class superPhotonCamera {
 
+    private String camaraName;
+
     private final PhotonCamera camera;
 
     private PhotonPipelineResult pipeLineResults;
@@ -49,6 +51,8 @@ public class superPhotonCamera {
         String cameraName,
         Transform3d CameraToRobotTransform
     ){
+
+        this.camaraName = cameraName;
 
         this.camera = new PhotonCamera(cameraName);
 
@@ -198,6 +202,12 @@ public class superPhotonCamera {
     public double getLatencySeconds(){
 
         return ( pipeLineResults != null ) ? pipeLineResults.getTimestampSeconds() : Double.NaN; 
+
+    }
+
+    public String getCamaraName(){
+
+        return this.camaraName;
 
     }
 

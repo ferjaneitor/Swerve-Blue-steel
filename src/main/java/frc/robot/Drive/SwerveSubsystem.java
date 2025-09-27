@@ -5,7 +5,6 @@ import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.revrobotics.spark.SparkMax;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
