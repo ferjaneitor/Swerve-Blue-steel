@@ -184,13 +184,9 @@ public class SwerveModule {
 
     public void SetDesireState( SwerveModuleState state ){
 
-        double StateVelocity = state.speedMetersPerSecond;
-
         double PhysicalMaxSpeed = DriveConstants.kPhysicalMaxSpeedMetersPerSecond;
 
-        double StateAngleRad = state.angle.getRadians();
-
-        if ( Math.abs( StateVelocity ) < 0.001 ){
+        if ( Math.abs( state.speedMetersPerSecond ) < 0.001 ){
 
             Stop();
             return;
@@ -198,6 +194,10 @@ public class SwerveModule {
         }
 
         state.optimize(getState().angle);
+
+        double StateAngleRad = state.angle.getRadians();
+
+        double StateVelocity = state.speedMetersPerSecond;
 
         double DriveMotorState = StateVelocity / PhysicalMaxSpeed;
 

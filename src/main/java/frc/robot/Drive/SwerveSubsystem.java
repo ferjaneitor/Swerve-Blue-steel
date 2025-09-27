@@ -10,6 +10,7 @@ import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -214,7 +215,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
         double heading = Math.IEEEremainder(gyro.getAngle(), 360);
 
-        return heading;
+        return heading * (DriveConstants.isGyroReversed ? -1.0 : 1.0);
 
     }
 
@@ -262,6 +263,27 @@ public class SwerveSubsystem extends SubsystemBase {
 
     }
 
+    private LinearFilter yawRateFilter = LinearFilter.singlePoleIIR(
+        2 * Math.PI * DriveConstants.YAW_RATE_LDP_CUTOFF_HZ,
+        0.02
+    );
+
+    private double yawRateFilteredDegPerSec = 0.0;
+
+    public double getYawRateDegPerSecRaw(){
+
+        double rate = gyro.getRate();
+
+        return rate * (DriveConstants.isGyroReversed ? -1.0 : 1.0);
+
+    }
+
+    public double getYawRateDegPerSec(){
+
+        return yawRateFilteredDegPerSec;
+
+    }
+
     @Override
     public void periodic(){
 
@@ -271,12 +293,17 @@ public class SwerveSubsystem extends SubsystemBase {
 
         poseEstimator.update(getRotation2d(), getModulePositions());
 
+        yawRateFilteredDegPerSec = yawRateFilter.calculate(getYawRateDegPerSecRaw());
+
         SmartDashboard.putNumber("RobotHeading: 2d Odometry ", getHeading());
         SmartDashboard.putString("Robot Location: 2d Odometry", Odometer.toString());
 
         SmartDashboard.putString("Robot Location: 3d Odometry", getPose3d().getTranslation().toString());
 
         SmartDashboard.putString("Robot Location Pose Estimation", poseEstimator.getEstimatedPosition().getTranslation().toString());
+
+        SmartDashboard.putNumber("Yaw Rate deg/seg raw", getYawRateDegPerSecRaw());
+        SmartDashboard.putNumber("Yaw Rate deg/seg filtered", getYawRateDegPerSec());
 
     }
 

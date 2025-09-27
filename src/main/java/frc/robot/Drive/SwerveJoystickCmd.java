@@ -58,18 +58,9 @@ public class SwerveJoystickCmd extends Command {
         turningSpeed = zLimiter.calculate(turningSpeed) * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond;
         
         // 4. Construct desired chassis speeds
-        ChassisSpeeds chassisSpeeds;
-        if (isFieldOrientedSupplier.get()) {
-            // Relative to robot
-            chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
-            swerveSubsystem.changeIsFieldOriented(false);
-        } else {
-            // Relative to robot
-            chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
-            // Relative to field
-            chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, turningSpeed, swerveSubsystem.getRotation2d());
-            swerveSubsystem.changeIsFieldOriented(true);
-        }
+        ChassisSpeeds chassisSpeeds = isFieldOrientedSupplier.get()
+            ? new ChassisSpeeds(xSpeed,ySpeed, turningSpeed)
+            : ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, turningSpeed, swerveSubsystem.getRotation2d());
         
         SwerveModuleState[] moduleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
         swerveSubsystem.setModuleStates(moduleStates);

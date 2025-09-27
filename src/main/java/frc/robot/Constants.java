@@ -91,6 +91,10 @@ public final class Constants {
         public static final double kTeleDriveMaxAngularSpeedRadiansPerSecond = kPhysicalMaxAngularSpeedRadiansPerSecond / 2; // Velocidad angular maxima
         public static final double kTeleDriveMaxAccelerationUnitsPerSecond = 3;
         public static final double kTeleDriveMaxAngularAccelerationUnitsPerSecond = 3;
+        
+        public static final double YAW_RATE_LDP_CUTOFF_HZ = 0.0;
+
+        public static final boolean isGyroReversed = false;
     }
 
     public static final class OIConstants {
