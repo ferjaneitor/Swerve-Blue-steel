@@ -8,6 +8,8 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -18,6 +20,8 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry3d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -222,7 +226,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public Pose2d getPose2d(){
 
-        return Odometer.getPoseMeters();
+        return poseEstimator.getEstimatedPosition();
 
     }
 
@@ -244,6 +248,20 @@ public class SwerveSubsystem extends SubsystemBase {
 
     }
 
+    private final SwerveDrivePoseEstimator poseEstimator =
+        new SwerveDrivePoseEstimator(
+            DriveConstants.kDriveKinematics
+            , getRotation2d()
+            , getModulePositions()
+            , getPose2d()
+        );
+
+    public void AddVisionMeasurment ( Pose2d Measurement, double timestampSeconds, Matrix<N3,N1> StdDevs ){
+
+        poseEstimator.addVisionMeasurement(Measurement, timestampSeconds, StdDevs);
+
+    }
+
     @Override
     public void periodic(){
 
@@ -251,10 +269,14 @@ public class SwerveSubsystem extends SubsystemBase {
 
         Odometer.update(getRotation2d(), getModulePositions());
 
+        poseEstimator.update(getRotation2d(), getModulePositions());
+
         SmartDashboard.putNumber("RobotHeading: 2d Odometry ", getHeading());
-        SmartDashboard.putString("Robot Location: 2d Odometry", getPose2d().getTranslation().toString());
+        SmartDashboard.putString("Robot Location: 2d Odometry", Odometer.toString());
 
         SmartDashboard.putString("Robot Location: 3d Odometry", getPose3d().getTranslation().toString());
+
+        SmartDashboard.putString("Robot Location Pose Estimation", poseEstimator.getEstimatedPosition().getTranslation().toString());
 
     }
 

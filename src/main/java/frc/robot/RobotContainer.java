@@ -31,7 +31,7 @@ public class RobotContainer {
     new CameraSpecs(VisionConstants.cameraName, VisionConstants.kRobotToCam, PoseEstimateSource.HIGH)
   );
 
-  private final visionSubsystem visionSubsystem = new visionSubsystem( ()-> 0.0 , cameraSpecsList );
+  private final visionSubsystem visionSubsystem = new visionSubsystem( ()-> 0.0 , cameraSpecsList, swerveSubsystem );
 
   private final CommandXboxController driverController = new CommandXboxController(0);
   private final CommandXboxController addOnssController = new CommandXboxController(1);

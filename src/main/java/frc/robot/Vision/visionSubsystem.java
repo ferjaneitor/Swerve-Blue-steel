@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
 import frc.robot.Constants.FieldCosntants;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.Drive.SwerveSubsystem;
 import frc.robot.Vision.CameraEntrys.CameraEntry;
 import frc.robot.Vision.CameraEntrys.CameraSpecs;
 
@@ -50,12 +51,16 @@ public class visionSubsystem extends SubsystemBase {
 
     private Supplier<Double> yawRateSiSupplier;
 
+    private SwerveSubsystem swerveSubsystem;
+
     public visionSubsystem (
         Supplier<Double> yawRateSupplier,
-        List<CameraSpecs> cameraSpecsList
+        List<CameraSpecs> cameraSpecsList,
+        SwerveSubsystem swerveSubsystem
     ){
 
         this.yawRateSiSupplier = yawRateSupplier; 
+        this.swerveSubsystem = swerveSubsystem;
         
         for ( CameraSpecs Source : cameraSpecsList ) addCamera(Source);
 
@@ -95,7 +100,7 @@ public class visionSubsystem extends SubsystemBase {
 
                     Pose2d measurment = EstimatedRobotPose.estimatedPose.toPose2d();
 
-                    RobotContainer.swerveSubsystem.AddVisionMeasurment( measurment, EstimatedRobotPose.timestampSeconds, EstimatedRobotPose);
+                    swerveSubsystem.AddVisionMeasurment( measurment, EstimatedRobotPose.timestampSeconds, std);
 
                 }
             );
@@ -125,7 +130,7 @@ public class visionSubsystem extends SubsystemBase {
 
         if( targetsUsed == 1 && avarageDistance > VisionConstants.MAX_DIST_SINGLE ) return false;
 
-        if( targetsUsed == 2 && avarageDistance > VisionConstants.MAX_DIST_MULTIPLE ) return false;
+        if( targetsUsed >= 2 && avarageDistance > VisionConstants.MAX_DIST_MULTIPLE ) return false;
 
         double yawRate = Math.abs( yawRateSiSupplier.get() );
 
